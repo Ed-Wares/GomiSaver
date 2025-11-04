@@ -35,7 +35,9 @@ jobs:
   build-and-upload:
     # Use the latest stable Windows runner
     runs-on: windows-latest
-
+    permissions:
+      contents: write # Grants write access to repository contents, including releases
+      
     steps:
       # ---
       # STEP 1: Check out your repository's code

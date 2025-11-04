@@ -57,6 +57,7 @@ jobs:
       # This step finds all files in your BUILD_OUTPUT_DIR and zips them.
       - name: Package binaries into a ZIP file
         run: |
+          rm -v ${{ env.BUILD_OUTPUT_DIR }}\*.o
           $asset_name = "${{ env.PROJECT_NAME }}-${{ github.event.release.tag_name }}-winx64.zip"
           powershell Compress-Archive -Path ${{ env.BUILD_OUTPUT_DIR }}\* -DestinationPath $asset_name -Force
           echo "ASSET_PATH=$asset_name" >> $env:GITHUB_ENV

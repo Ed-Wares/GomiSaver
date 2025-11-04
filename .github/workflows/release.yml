@@ -57,27 +57,18 @@ jobs:
       # This step finds all files in your BUILD_OUTPUT_DIR and zips them.
       - name: Package binaries into a ZIP file
         run: |
-          powershell Compress-Archive -Path ${{ env.BUILD_OUTPUT_DIR }}\* -DestinationPath ${{ env.PROJECT_NAME }}.zip -Force
+          $asset_name = "${{ env.PROJECT_NAME }}-${{ github.event.release.tag_name }}-winx64.zip"
+          powershell Get-ChildItem -Path "${{ env.BUILD_OUTPUT_DIR }}" -Recurse -Exclude "*.o" | Compress-Archive -DestinationPath $asset_name -Force
+          echo "ASSET_PATH=$asset_name" >> $env:GITHUB_ENV
         shell: pwsh
 
       # ---
       # STEP 5: Upload the ZIP file to the GitHub Release
       # ---
-      # This uses the 'upload_url' from the 'release' event that triggered the workflow.
+      # This uses the 'gh' CLI (pre-installed) to upload the asset
+      # to the release that triggered this workflow.
       - name: Upload binaries to release
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          # The URL for uploading assets to the release
-          upload_url: ${{ github.event.release.upload_url }}
-          
-          # The path to the file you just zipped
-          asset_path: ./${{ env.PROJECT_NAME }}.zip
-          
-          # The name of the file as it will appear in the release.
-          # We add the tag name to make it unique and descriptive.
-          asset_name: ${{ env.PROJECT_NAME }}-${{ github.event.release.tag_name }}-winx64.zip
-          
-          # The content type of the asset
-          asset_content_type: application/zip
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} ${{ env.ASSET_PATH }} --clobber

@@ -15,7 +15,7 @@ name: Release
 on:
   release:
     types: [published, prereleased]
-
+ 
 # ---
 # ENVIRONMENT VARIABLES
 # ---
@@ -35,10 +35,6 @@ jobs:
   build-and-upload:
     # Use the latest stable Windows runner
     runs-on: windows-latest
-
-    permissions:
-      contents: read # To check out the code
-      releases: write # To upload assets to the release
 
     steps:
       # ---

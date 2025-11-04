@@ -58,7 +58,7 @@ jobs:
       - name: Package binaries into a ZIP file
         run: |
           $asset_name = "${{ env.PROJECT_NAME }}-${{ github.event.release.tag_name }}-winx64.zip"
-          powershell Get-ChildItem -Path "${{ env.BUILD_OUTPUT_DIR }}" -Recurse -Exclude "*.o" | Compress-Archive -DestinationPath $asset_name -Force
+          powershell Compress-Archive -Path ${{ env.BUILD_OUTPUT_DIR }}\* -DestinationPath $asset_name -Force
           echo "ASSET_PATH=$asset_name" >> $env:GITHUB_ENV
         shell: pwsh
 

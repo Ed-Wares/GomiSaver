@@ -8,23 +8,29 @@ CXXFLAGS = -Wall -std=c++17 -lgdi32 -mwindows
 # Source files
 SRCS = GomiSaver.c
 
-# Object files (generated from source files)
-OBJS = $(SRCS:.c=.o)
-
 # Executable name
 TARGET = GomiSaver.exe
 
-# Default target: build the executable
-all: $(TARGET)
+# Define the output directory for the Release build
+BUILD_DIR = Release
 
-# Rule to link object files into the executable
-$(TARGET): $(OBJS)
+# Generate object file names with the build directory prefix
+OBJS = $(addprefix $(BUILD_DIR)/, $(SRCS:.c=.o))
+
+.PHONY: all clean
+
+all: $(BUILD_DIR) $(BUILD_DIR)/$(TARGET)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(BUILD_DIR)/$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+#	@del $(BUILD_DIR)\*.o
+#	@rm $(BUILD_DIR)/*.o
 
-# Rule to compile each source file into an object file
-%.o: %.c
+$(BUILD_DIR)/%.o: %.c
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Clean up rule: remove object files and the executable
 clean:
-	del $(OBJS) $(TARGET)
+	rm -rf $(BUILD_DIR)

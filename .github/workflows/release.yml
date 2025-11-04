@@ -1,0 +1,85 @@
+# This is a GitHub Action workflow to build a Windows C++ project
+# using a Makefile (with make) and upload the binaries to a release.
+
+name: Release
+
+# ---
+# TRIGGER
+# ---
+# This workflow runs when a new release is 'published' or 'prereleased'.
+# It will NOT run when a release is just 'saved as a draft'.
+# The intended workflow is:
+# 1. You create a new release and save it as a draft.
+# 2. When you are ready, you "Publish" it (either as a full or pre-release).
+# 3. This action will then trigger, build, and upload the assets.
+on:
+  release:
+    types: [published, prereleased]
+
+# ---
+# ENVIRONMENT VARIABLES
+# ---
+# Customize these variables for your project
+env:
+  # The name of your project. Used for naming the final .zip file.
+  PROJECT_NAME: GomiSaver
+  
+  # The name of your Makefile.
+  MAKEFILE_NAME: Makefile
+  
+  # The directory where your binaries (e.g., .exe, .dll) are built.
+  # Assumes 'Release' folder in the root. Update if yours is different (e.g., 'build/Release').
+  BUILD_OUTPUT_DIR: Release
+
+jobs:
+  build-and-upload:
+    # Use the latest stable Windows runner
+    runs-on: windows-latest
+
+    permissions:
+      contents: read # To check out the code
+      releases: write # To upload assets to the release
+
+    steps:
+      # ---
+      # STEP 1: Check out your repository's code
+      # ---
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---
+      # STEP 3: Build the C++ project using make
+      # ---
+      - name: make
+        run: make
+
+      # ---
+      # STEP 4: Package the built binaries into a ZIP file
+      # ---
+      # This step finds all files in your BUILD_OUTPUT_DIR and zips them.
+      - name: Package binaries into a ZIP file
+        run: |
+          powershell Compress-Archive -Path ${{ env.BUILD_OUTPUT_DIR }}\* -DestinationPath ${{ env.PROJECT_NAME }}.zip -Force
+        shell: pwsh
+
+      # ---
+      # STEP 5: Upload the ZIP file to the GitHub Release
+      # ---
+      # This uses the 'upload_url' from the 'release' event that triggered the workflow.
+      - name: Upload binaries to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # The URL for uploading assets to the release
+          upload_url: ${{ github.event.release.upload_url }}
+          
+          # The path to the file you just zipped
+          asset_path: ./${{ env.PROJECT_NAME }}.zip
+          
+          # The name of the file as it will appear in the release.
+          # We add the tag name to make it unique and descriptive.
+          asset_name: ${{ env.PROJECT_NAME }}-${{ github.event.release.tag_name }}-winx64.zip
+          
+          # The content type of the asset
+          asset_content_type: application/zip
